@@ -36,7 +36,7 @@ class TelegramSubscriptionBot {
         });
 
         // Webhook для Продамус
-        this.app.post('/webhook/prodamus', (req, res) => {
+        this.app.post('/sales/prodamus', (req, res) => {
             this.handleProdamusWebhook(req, res);
         });
 
@@ -105,7 +105,7 @@ class TelegramSubscriptionBot {
         const server = this.app.listen(this.port, () => {
             console.log(`Bot server running on port ${this.port}`);
             console.log(`Telegram webhook: ${process.env.WEBHOOK_URL}${process.env.WEBHOOK_PATH}`);
-            console.log(`Prodamus webhook: ${process.env.WEBHOOK_URL}/webhook/prodamus`);
+            console.log(`Prodamus webhook: ${process.env.WEBHOOK_URL}/sales/prodamus`);
         });
 
         server.on('error', (err) => {

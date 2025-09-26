@@ -21,11 +21,22 @@ class ProdamusService {
         try {
             const { userId, amount, description, orderId } = paymentData;
             
-            // Формируем минимальные данные для платежной ссылки
+            // Формируем полные данные для платежной ссылки согласно документации Продамус
             const data = {
                 do: 'pay',
                 sys: this.shopId,
-                order_id: orderId
+                order_id: orderId,
+                amount: amount,
+                currency: process.env.CURRENCY || 'RUB',
+                description: description,
+                client_email: `${userId}@telegram.user`,
+                success_url: `${process.env.WEBHOOK_URL}/success`,
+                failure_url: `${process.env.WEBHOOK_URL}/failure`,
+                webhook_url: process.env.PRODAMUS_WEBHOOK_URL,
+                // Дополнительные поля для Telegram пользователя
+                custom_fields: JSON.stringify({
+                    telegram_user_id: userId
+                })
             };
 
             // Создаем HMAC подпись

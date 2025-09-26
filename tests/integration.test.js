@@ -61,7 +61,7 @@ describe('Integration Tests', () => {
 
             expect(mockApp.use).toHaveBeenCalled();
             expect(mockApp.post).toHaveBeenCalledWith('/webhook/telegram', expect.any(Function));
-            expect(mockApp.post).toHaveBeenCalledWith('/webhook/prodamus', expect.any(Function));
+            expect(mockApp.post).toHaveBeenCalledWith('/sales/prodamus', expect.any(Function));
             expect(mockApp.get).toHaveBeenCalledWith('/status', expect.any(Function));
         });
 

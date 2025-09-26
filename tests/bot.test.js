@@ -20,7 +20,7 @@ describe('TelegramSubscriptionBot', () => {
         process.env.PORT = '3000';
         process.env.WEBHOOK_URL = 'https://test.com';
         process.env.WEBHOOK_PATH = '/webhook/telegram';
-        process.env.PRODAMUS_WEBHOOK_URL = 'https://test.com/webhook/prodamus';
+        process.env.PRODAMUS_WEBHOOK_URL = 'https://test.com/sales/prodamus';
     });
 
     afterEach(() => {
@@ -81,7 +81,7 @@ describe('TelegramSubscriptionBot', () => {
             bot = new TelegramSubscriptionBot();
 
             expect(mockApp.post).toHaveBeenCalledWith('/webhook/telegram', expect.any(Function));
-            expect(mockApp.post).toHaveBeenCalledWith('/webhook/prodamus', expect.any(Function));
+            expect(mockApp.post).toHaveBeenCalledWith('/sales/prodamus', expect.any(Function));
             expect(mockApp.get).toHaveBeenCalledWith('/status', expect.any(Function));
         });
     });

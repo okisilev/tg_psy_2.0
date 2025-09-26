@@ -8,7 +8,7 @@ describe('ProdamusService', () => {
         process.env.PRODAMUS_SECRET_KEY = 'test_secret_key';
         process.env.PRODAMUS_PAYMENT_FORM_URL = 'https://payform.ru/pay';
         process.env.WEBHOOK_URL = 'https://test.com';
-        process.env.PRODAMUS_WEBHOOK_URL = 'https://test.com/webhook/prodamus';
+        process.env.PRODAMUS_WEBHOOK_URL = 'https://test.com/sales/prodamus';
         process.env.CURRENCY = 'RUB';
         
         prodamusService = new ProdamusService();
@@ -34,7 +34,7 @@ describe('ProdamusService', () => {
             expect(result.paymentUrl).toContain('signature=');
         });
 
-        test('should include minimal required parameters in URL', async () => {
+        test('should include all required parameters in URL', async () => {
             const paymentData = {
                 userId: '12345',
                 amount: 1000,
@@ -48,6 +48,14 @@ describe('ProdamusService', () => {
             expect(result.paymentUrl).toContain('do=pay');
             expect(result.paymentUrl).toContain('sys=test_shop');
             expect(result.paymentUrl).toContain('order_id=order_123');
+            expect(result.paymentUrl).toContain('amount=1000');
+            expect(result.paymentUrl).toContain('currency=RUB');
+            expect(result.paymentUrl).toContain('description=Test+payment');
+            expect(result.paymentUrl).toContain('client_email=12345%40telegram.user');
+            expect(result.paymentUrl).toContain('success_url=https%3A%2F%2Ftest.com%2Fsuccess');
+            expect(result.paymentUrl).toContain('failure_url=https%3A%2F%2Ftest.com%2Ffailure');
+            expect(result.paymentUrl).toContain('webhook_url=https%3A%2F%2Ftest.com%2Fsales%2Fprodamus');
+            expect(result.paymentUrl).toContain('custom_fields=');
             expect(result.paymentUrl).toContain('signature=');
         });
 
