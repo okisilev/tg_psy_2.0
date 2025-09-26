@@ -18,9 +18,9 @@ describe('TelegramSubscriptionBot', () => {
         // Mock environment variables
         process.env.TELEGRAM_BOT_TOKEN = 'test_token';
         process.env.PORT = '3000';
-        process.env.WEBHOOK_URL = 'https://test.com';
+        process.env.WEBHOOK_URL = 'https://yourdomain.com';
         process.env.WEBHOOK_PATH = '/webhook/telegram';
-        process.env.PRODAMUS_WEBHOOK_URL = 'https://test.com/sales/prodamus';
+        process.env.PRODAMUS_WEBHOOK_URL = 'https://yourdomain.com/sales/prodamus';
     });
 
     afterEach(() => {

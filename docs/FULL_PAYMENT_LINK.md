@@ -31,7 +31,7 @@ const data = {
 ### 2. Пример полной ссылки
 
 ```
-https://dashastar.payform.ru/?do=pay&sys=dashastar&order_id=12345&amount=1000&currency=RUB&description=Подписка+на+закрытый+канал&client_email=123456789%40telegram.user&success_url=https%3A%2F%2Fdashastar.pagekite.me%2Fsuccess&failure_url=https%3A%2F%2Fdashastar.pagekite.me%2Ffailure&webhook_url=https%3A%2F%2Fdashastar.pagekite.me%2Fsales%2Fprodamus&custom_fields=%7B%22telegram_user_id%22%3A%22123456789%22%7D&signature=8832f6193cfc55d2cb8db600c29a2208d6f2b4e59c324665ba2271be72e3b5f7
+https://dashastar.payform.ru/?do=pay&sys=dashastar&order_id=12345&amount=1000&currency=RUB&description=Подписка+на+закрытый+канал&client_email=123456789%40telegram.user&success_url=https%3A%2F%2Fyourdomain.com%2Fsuccess&failure_url=https%3A%2F%2Fyourdomain.com%2Ffailure&webhook_url=https%3A%2F%2Fyourdomain.com%2Fsales%2Fprodamus&custom_fields=%7B%22telegram_user_id%22%3A%22123456789%22%7D&signature=8832f6193cfc55d2cb8db600c29a2208d6f2b4e59c324665ba2271be72e3b5f7
 ```
 
 ### 3. Декодированные параметры
@@ -45,9 +45,9 @@ https://dashastar.payform.ru/?do=pay&sys=dashastar&order_id=12345&amount=1000&cu
 | `currency` | `RUB` | Валюта |
 | `description` | `Подписка на закрытый канал` | Описание платежа |
 | `client_email` | `123456789@telegram.user` | Email клиента |
-| `success_url` | `https://dashastar.pagekite.me/success` | URL успешной оплаты |
-| `failure_url` | `https://dashastar.pagekite.me/failure` | URL неудачной оплаты |
-| `webhook_url` | `https://dashastar.pagekite.me/sales/prodamus` | URL webhook |
+| `success_url` | `https://yourdomain.com/success` | URL успешной оплаты |
+| `failure_url` | `https://yourdomain.com/failure` | URL неудачной оплаты |
+| `webhook_url` | `https://yourdomain.com/sales/prodamus` | URL webhook |
 | `custom_fields` | `{"telegram_user_id":"123456789"}` | Дополнительные поля |
 | `signature` | `8832f6193cfc55d2cb8db600c29a2208d6f2b4e59c324665ba2271be72e3b5f7` | HMAC подпись |
 
@@ -90,7 +90,7 @@ createHmacSignature(data) {
 ### 2. Строка для подписи
 
 ```
-amount=1000&client_email=123456789@telegram.user&currency=RUB&custom_fields={"telegram_user_id":"123456789"}&description=Подписка на закрытый канал&do=pay&failure_url=https://dashastar.pagekite.me/failure&order_id=12345&success_url=https://dashastar.pagekite.me/success&sys=dashastar&webhook_url=https://dashastar.pagekite.me/sales/prodamus
+amount=1000&client_email=123456789@telegram.user&currency=RUB&custom_fields={"telegram_user_id":"123456789"}&description=Подписка на закрытый канал&do=pay&failure_url=https://yourdomain.com/failure&order_id=12345&success_url=https://yourdomain.com/success&sys=dashastar&webhook_url=https://yourdomain.com/sales/prodamus
 ```
 
 ### 3. Проверка подписи
@@ -187,7 +187,7 @@ npm run test:payment
 ```bash
 # Декодирование URL
 node -e "
-const url = 'https://dashastar.payform.ru/?do=pay&sys=dashastar&order_id=12345&amount=1000&currency=RUB&description=Подписка+на+закрытый+канал&client_email=123456789%40telegram.user&success_url=https%3A%2F%2Fdashastar.pagekite.me%2Fsuccess&failure_url=https%3A%2F%2Fdashastar.pagekite.me%2Ffailure&webhook_url=https%3A%2F%2Fdashastar.pagekite.me%2Fsales%2Fprodamus&custom_fields=%7B%22telegram_user_id%22%3A%22123456789%22%7D&signature=8832f6193cfc55d2cb8db600c29a2208d6f2b4e59c324665ba2271be72e3b5f7';
+const url = 'https://dashastar.payform.ru/?do=pay&sys=dashastar&order_id=12345&amount=1000&currency=RUB&description=Подписка+на+закрытый+канал&client_email=123456789%40telegram.user&success_url=https%3A%2F%2Fyourdomain.com%2Fsuccess&failure_url=https%3A%2F%2Fyourdomain.com%2Ffailure&webhook_url=https%3A%2F%2Fyourdomain.com%2Fsales%2Fprodamus&custom_fields=%7B%22telegram_user_id%22%3A%22123456789%22%7D&signature=8832f6193cfc55d2cb8db600c29a2208d6f2b4e59c324665ba2271be72e3b5f7';
 const params = new URLSearchParams(url.split('?')[1]);
 for (const [key, value] of params) {
     console.log(\`\${key}: \${decodeURIComponent(value)}\`);
@@ -209,9 +209,9 @@ const data = {
     currency: 'RUB',
     description: 'Подписка на закрытый канал',
     client_email: '123456789@telegram.user',
-    success_url: 'https://dashastar.pagekite.me/success',
-    failure_url: 'https://dashastar.pagekite.me/failure',
-    webhook_url: 'https://dashastar.pagekite.me/sales/prodamus',
+    success_url: 'https://yourdomain.com/success',
+    failure_url: 'https://yourdomain.com/failure',
+    webhook_url: 'https://yourdomain.com/sales/prodamus',
     custom_fields: '{\"telegram_user_id\":\"123456789\"}'
 };
 
@@ -234,7 +234,7 @@ console.log('Signature:', signature);
 
 ### 2. Webhook настройки
 
-- **URL:** `https://dashastar.pagekite.me/sales/prodamus`
+- **URL:** `https://yourdomain.com/sales/prodamus`
 - **Метод:** POST
 - **Формат:** application/x-www-form-urlencoded
 - **Подпись:** HMAC-SHA256
@@ -259,10 +259,10 @@ npm start
 
 ```bash
 # Тест доступности
-curl -I https://dashastar.pagekite.me/sales/prodamus
+curl -I https://yourdomain.com/sales/prodamus
 
 # Тест webhook'а
-curl -X POST https://dashastar.pagekite.me/sales/prodamus \
+curl -X POST https://yourdomain.com/sales/prodamus \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -H "Sign: test_signature" \
   -d "test=data"
@@ -271,7 +271,7 @@ curl -X POST https://dashastar.pagekite.me/sales/prodamus \
 ### 3. Статус сервера
 
 ```bash
-curl https://dashastar.pagekite.me/status
+curl https://yourdomain.com/status
 ```
 
 ## Рекомендации

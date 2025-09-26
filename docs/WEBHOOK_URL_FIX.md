@@ -4,12 +4,12 @@
 
 Продамус отправляет тестовые уведомления на URL:
 ```
-https://dashastar.pagekite.me/sales/prodamus
+https://yourdomain.com/sales/prodamus
 ```
 
 Но бот слушал на:
 ```
-https://dashastar.pagekite.me/webhook/prodamus
+https://yourdomain.com/webhook/prodamus
 ```
 
 Это приводило к ошибке `503 Unavailable`.
@@ -66,7 +66,7 @@ PRODAMUS_WEBHOOK_URL=https://yourdomain.com/sales/prodamus
 
 Укажите webhook URL:
 ```
-https://dashastar.pagekite.me/sales/prodamus
+https://yourdomain.com/sales/prodamus
 ```
 
 ### 2. Тестовые уведомления
@@ -118,8 +118,8 @@ npm start
 Ожидаемый вывод:
 ```
 Bot server running on port 3000
-Telegram webhook: https://dashastar.pagekite.me/webhook/telegram
-Prodamus webhook: https://dashastar.pagekite.me/sales/prodamus
+Telegram webhook: https://yourdomain.com/webhook/telegram
+Prodamus webhook: https://yourdomain.com/sales/prodamus
 ```
 
 ### 2. Тестирование webhook
@@ -135,7 +135,7 @@ Subscription created successfully: { ... }
 ### 3. Проверка статуса
 
 ```bash
-curl https://dashastar.pagekite.me/status
+curl https://yourdomain.com/status
 ```
 
 Ожидаемый ответ:
@@ -162,7 +162,7 @@ npm start
 
 ```bash
 # Тест webhook вручную
-curl -X POST https://dashastar.pagekite.me/sales/prodamus \
+curl -X POST https://yourdomain.com/sales/prodamus \
   -H "Content-Type: application/json" \
   -H "Sign: test_signature" \
   -d '{"test": "data"}'
@@ -172,7 +172,7 @@ curl -X POST https://dashastar.pagekite.me/sales/prodamus \
 
 ```bash
 # Проверка доступности сервера
-curl -I https://dashastar.pagekite.me/sales/prodamus
+curl -I https://yourdomain.com/sales/prodamus
 ```
 
 ## Безопасность

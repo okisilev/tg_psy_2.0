@@ -21,29 +21,29 @@ class ProdamusService {
         try {
             const { userId, amount, description, orderId } = paymentData;
             
-            // Формируем полные данные для платежной ссылки согласно документации Продамус
+            // Формируем данные для создания ссылки согласно документации Продамус
             const data = {
-                do: 'pay',
+                do: 'link',
                 sys: this.shopId,
                 order_id: orderId,
                 amount: amount,
                 currency: process.env.CURRENCY || 'RUB',
                 description: description,
-                client_email: `${userId}@telegram.user`,
-                success_url: `${process.env.WEBHOOK_URL}/success`,
-                failure_url: `${process.env.WEBHOOK_URL}/failure`,
+                customer_email: `${userId}@telegram.user`,
+                urlReturn: `${process.env.WEBHOOK_URL}/success`,
+                urlSuccess: `${process.env.WEBHOOK_URL}/success`,
                 webhook_url: process.env.PRODAMUS_WEBHOOK_URL,
                 // Дополнительные поля для Telegram пользователя
-                custom_fields: JSON.stringify({
+                customer_extra: JSON.stringify({
                     telegram_user_id: userId
                 })
             };
 
-            // Создаем HMAC подпись
+            // Создаем HMAC подпись (без поля signature)
             const signature = this.createHmacSignature(data);
             data.signature = signature;
 
-            // Формируем URL с параметрами
+            // Формируем URL с параметрами (API не работает корректно)
             const paymentUrl = this.buildPaymentUrl(data);
 
             return {
@@ -66,16 +66,66 @@ class ProdamusService {
      * @returns {string} - HMAC подпись
      */
     createHmacSignature(data) {
+        // Создаем копию данных без поля signature
+        const dataForSignature = { ...data };
+        delete dataForSignature.signature;
+        
         // Сортируем ключи для правильного формирования подписи
-        const sortedKeys = Object.keys(data).sort();
+        const sortedKeys = Object.keys(dataForSignature).sort();
         const signatureString = sortedKeys
-            .map(key => `${key}=${data[key]}`)
+            .map(key => `${key}=${dataForSignature[key]}`)
             .join('&');
             
         return crypto
             .createHmac('sha256', this.secretKey)
             .update(signatureString, 'utf8')
             .digest('hex');
+    }
+
+    /**
+     * Создает ссылку на оплату через API Продамус
+     * @param {Object} data - Данные платежа
+     * @returns {Promise<string>} - URL платежной формы
+     */
+    async createPaymentLink(data) {
+        try {
+            const axios = require('axios');
+            
+            // Формируем URL для запроса (базовый URL без /pay)
+            const apiUrl = this.paymentFormUrl.replace('/pay', '');
+            
+            // Делаем GET запрос к API Продамус
+            const response = await axios.get(apiUrl, {
+                params: data,
+                timeout: 10000
+            });
+
+            // Проверяем ответ
+            if (response.data && typeof response.data === 'string') {
+                // Если ответ содержит URL, возвращаем его
+                if (response.data.startsWith('http')) {
+                    return response.data;
+                }
+                // Если ответ содержит HTML, извлекаем URL из него
+                const urlMatch = response.data.match(/href="([^"]*pay[^"]*)"/);
+                if (urlMatch) {
+                    return urlMatch[1];
+                }
+                // Ищем ссылку на оплату в HTML
+                const payUrlMatch = response.data.match(/href="([^"]*\/pay[^"]*)"/);
+                if (payUrlMatch) {
+                    return payUrlMatch[1];
+                }
+            }
+
+            // Если не удалось извлечь URL, формируем его вручную
+            return this.buildPaymentUrl(data);
+            
+        } catch (error) {
+            console.error('Prodamus API request error:', error.message);
+            // В случае ошибки API, формируем URL вручную
+            return this.buildPaymentUrl(data);
+        }
     }
 
     /**
