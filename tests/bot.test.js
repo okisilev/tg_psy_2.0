@@ -3,6 +3,10 @@ const TelegramSubscriptionBot = require('../src/bot');
 // Mock dependencies
 jest.mock('node-telegram-bot-api');
 jest.mock('express');
+jest.mock('body-parser', () => ({
+    json: jest.fn(() => 'jsonParser'),
+    urlencoded: jest.fn(() => 'urlParser')
+}));
 jest.mock('../src/services/prodamusService');
 jest.mock('../src/services/subscriptionService');
 jest.mock('../src/services/hmacService');
@@ -26,12 +30,21 @@ describe('TelegramSubscriptionBot', () => {
     describe('constructor', () => {
         test('should initialize bot with correct token', () => {
             const TelegramBot = require('node-telegram-bot-api');
+            const express = require('express');
             const mockBot = {
                 onText: jest.fn(),
                 on: jest.fn(),
                 processUpdate: jest.fn()
             };
+            const mockApp = {
+                use: jest.fn(),
+                post: jest.fn(),
+                get: jest.fn(),
+                listen: jest.fn()
+            };
+            
             TelegramBot.mockReturnValue(mockBot);
+            express.mockReturnValue(mockApp);
 
             bot = new TelegramSubscriptionBot();
 
@@ -98,7 +111,7 @@ describe('TelegramSubscriptionBot', () => {
 
             mockReq = {
                 body: { test: 'data' },
-                headers: { 'x-prodamus-signature': 'test_signature' }
+                headers: { 'Sign': 'test_signature' }
             };
             mockRes = {
                 status: jest.fn().mockReturnThis(),
@@ -107,10 +120,11 @@ describe('TelegramSubscriptionBot', () => {
         });
 
         test('should handle valid webhook', async () => {
-            const HmacService = require('../src/services/hmacService');
+            const ProdamusService = require('../src/services/prodamusService');
             const SubscriptionService = require('../src/services/subscriptionService');
             
-            HmacService.prototype.verifySignature.mockReturnValue(true);
+            // Mock the services
+            ProdamusService.prototype.verifyWebhookSignature.mockReturnValue(true);
             SubscriptionService.prototype.processPayment.mockResolvedValue({ success: true });
 
             await bot.handleProdamusWebhook(mockReq, mockRes);
@@ -119,8 +133,8 @@ describe('TelegramSubscriptionBot', () => {
         });
 
         test('should handle invalid signature', async () => {
-            const HmacService = require('../src/services/hmacService');
-            HmacService.prototype.verifySignature.mockReturnValue(false);
+            const ProdamusService = require('../src/services/prodamusService');
+            ProdamusService.prototype.verifyWebhookSignature.mockReturnValue(false);
 
             await bot.handleProdamusWebhook(mockReq, mockRes);
 
@@ -129,10 +143,10 @@ describe('TelegramSubscriptionBot', () => {
         });
 
         test('should handle processing error', async () => {
-            const HmacService = require('../src/services/hmacService');
+            const ProdamusService = require('../src/services/prodamusService');
             const SubscriptionService = require('../src/services/subscriptionService');
             
-            HmacService.prototype.verifySignature.mockReturnValue(true);
+            ProdamusService.prototype.verifyWebhookSignature.mockReturnValue(true);
             SubscriptionService.prototype.processPayment.mockRejectedValue(new Error('Processing error'));
 
             await bot.handleProdamusWebhook(mockReq, mockRes);

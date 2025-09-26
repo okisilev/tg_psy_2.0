@@ -52,10 +52,6 @@ describe('ProdamusService', () => {
         });
 
         test('should handle payment creation error', async () => {
-            // Mock environment to cause error
-            const originalShopId = process.env.PRODAMUS_SHOP_ID;
-            delete process.env.PRODAMUS_SHOP_ID;
-
             const paymentData = {
                 userId: '12345',
                 amount: 1000,
@@ -63,13 +59,20 @@ describe('ProdamusService', () => {
                 orderId: 'order_123'
             };
 
+            // Mock the createHmacSignature method to throw an error
+            const originalCreateHmacSignature = prodamusService.createHmacSignature;
+            prodamusService.createHmacSignature = jest.fn(() => {
+                throw new Error('HMAC creation failed');
+            });
+
             const result = await prodamusService.createPayment(paymentData);
 
             expect(result.success).toBe(false);
             expect(result.error).toBeDefined();
+            expect(result.error).toContain('Payment creation failed');
             
-            // Restore environment
-            process.env.PRODAMUS_SHOP_ID = originalShopId;
+            // Restore original method
+            prodamusService.createHmacSignature = originalCreateHmacSignature;
         });
     });
 
