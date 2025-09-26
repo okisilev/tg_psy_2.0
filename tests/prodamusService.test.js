@@ -48,14 +48,17 @@ describe('ProdamusService', () => {
             expect(result.paymentUrl).toContain('do=pay');
             expect(result.paymentUrl).toContain('sys=test_shop');
             expect(result.paymentUrl).toContain('order_id=order_123');
-            expect(result.paymentUrl).toContain('amount=1000');
-            expect(result.paymentUrl).toContain('currency=RUB');
-            expect(result.paymentUrl).toContain('description=Test+payment');
-            expect(result.paymentUrl).toContain('client_email=12345%40telegram.user');
-            expect(result.paymentUrl).toContain('success_url=https%3A%2F%2Fyourdomain.com%2Fsuccess');
-            expect(result.paymentUrl).toContain('failure_url=https%3A%2F%2Fyourdomain.com%2Ffailure');
-            expect(result.paymentUrl).toContain('webhook_url=https%3A%2F%2Fyourdomain.com%2Fsales%2Fprodamus');
-            expect(result.paymentUrl).toContain('custom_fields=');
+            expect(result.paymentUrl).toContain('products%5B0%5D%5Bprice%5D=1000');
+            expect(result.paymentUrl).toContain('products%5B0%5D%5Bname%5D=Test+payment');
+            expect(result.paymentUrl).toContain('customer_email=12345%40telegram.user');
+            expect(result.paymentUrl).toContain('urlReturn=https%3A%2F%2Fyourdomain.com%2Fsuccess');
+            expect(result.paymentUrl).toContain('urlSuccess=https%3A%2F%2Fyourdomain.com%2Fsuccess');
+            expect(result.paymentUrl).toContain('urlNotification=https%3A%2F%2Fyourdomain.com%2Fsales%2Fprodamus');
+            expect(result.paymentUrl).toContain('customer_extra=');
+            expect(result.paymentUrl).toContain('products%5B0%5D%5Bname%5D=');
+            expect(result.paymentUrl).toContain('products%5B0%5D%5Bprice%5D=');
+            expect(result.paymentUrl).toContain('products%5B0%5D%5Bquantity%5D=');
+            expect(result.paymentUrl).toContain('npd_income_type=FROM_INDIVIDUAL');
             expect(result.paymentUrl).toContain('signature=');
         });
 

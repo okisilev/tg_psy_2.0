@@ -102,8 +102,8 @@ class TelegramSubscriptionBot {
     }
 
     start() {
-        const server = this.app.listen(this.port, () => {
-            console.log(`Bot server running on port ${this.port}`);
+        const server = this.app.listen(this.port, '0.0.0.0', () => {
+            console.log(`Bot server running on 0.0.0.0:${this.port}`);
             console.log(`Telegram webhook: ${process.env.WEBHOOK_URL}${process.env.WEBHOOK_PATH}`);
             console.log(`Prodamus webhook: ${process.env.WEBHOOK_URL}/sales/prodamus`);
         });

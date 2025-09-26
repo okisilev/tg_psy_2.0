@@ -21,29 +21,38 @@ class ProdamusService {
         try {
             const { userId, amount, description, orderId } = paymentData;
             
-            // Формируем данные для создания ссылки согласно документации Продамус
+            // Формируем данные для создания платежной ссылки согласно документации Продамус
             const data = {
-                do: 'link',
+                do: 'pay',
                 sys: this.shopId,
                 order_id: orderId,
-                amount: amount,
-                currency: process.env.CURRENCY || 'RUB',
-                description: description,
                 customer_email: `${userId}@telegram.user`,
-                urlReturn: `${process.env.WEBHOOK_URL}/success`,
-                urlSuccess: `${process.env.WEBHOOK_URL}/success`,
-                webhook_url: process.env.PRODAMUS_WEBHOOK_URL,
-                // Дополнительные поля для Telegram пользователя
                 customer_extra: JSON.stringify({
                     telegram_user_id: userId
-                })
+                }),
+                products: [
+                    {
+                        name: description,
+                        price: amount.toString(),
+                        quantity: '1',
+                        tax: {
+                            tax_type: 0  // без НДС
+                        },
+                        paymentMethod: 4,  // полная оплата в момент передачи предмета расчёта
+                        paymentObject: 4   // услуга
+                    }
+                ],
+                urlReturn: `${process.env.WEBHOOK_URL}/success`,
+                urlSuccess: `${process.env.WEBHOOK_URL}/success`,
+                urlNotification: process.env.PRODAMUS_WEBHOOK_URL,
+                npd_income_type: 'FROM_INDIVIDUAL'
             };
 
             // Создаем HMAC подпись (без поля signature)
             const signature = this.createHmacSignature(data);
             data.signature = signature;
 
-            // Формируем URL с параметрами (API не работает корректно)
+            // Формируем URL с параметрами согласно документации
             const paymentUrl = this.buildPaymentUrl(data);
 
             return {
@@ -70,16 +79,96 @@ class ProdamusService {
         const dataForSignature = { ...data };
         delete dataForSignature.signature;
         
+        // Обрабатываем вложенные объекты и массивы
+        const processedData = this.processDataForSignature(dataForSignature);
+        
         // Сортируем ключи для правильного формирования подписи
-        const sortedKeys = Object.keys(dataForSignature).sort();
+        const sortedKeys = Object.keys(processedData).sort();
         const signatureString = sortedKeys
-            .map(key => `${key}=${dataForSignature[key]}`)
+            .map(key => `${key}=${processedData[key]}`)
             .join('&');
             
         return crypto
             .createHmac('sha256', this.secretKey)
             .update(signatureString, 'utf8')
             .digest('hex');
+    }
+
+    /**
+     * Обрабатывает данные для создания подписи (включая вложенные объекты)
+     * @param {Object} data - Данные для обработки
+     * @returns {Object} - Обработанные данные
+     */
+    processDataForSignature(data) {
+        const processed = {};
+        
+        for (const [key, value] of Object.entries(data)) {
+            if (Array.isArray(value)) {
+                // Обрабатываем массивы (например, products)
+                processed[key] = value.map((item, index) => {
+                    if (typeof item === 'object') {
+                        return this.processDataForSignature(item);
+                    }
+                    return item;
+                });
+            } else if (typeof value === 'object' && value !== null) {
+                // Обрабатываем вложенные объекты
+                processed[key] = this.processDataForSignature(value);
+            } else {
+                processed[key] = value;
+            }
+        }
+        
+        return processed;
+    }
+
+    /**
+     * Создает ссылку на оплату через API Продамус согласно документации
+     * @param {Object} data - Данные платежа
+     * @returns {Promise<string>} - URL платежной формы
+     */
+    async createPaymentLinkViaApi(data) {
+        try {
+            const axios = require('axios');
+            
+            // Формируем URL для запроса (базовый URL без /pay)
+            const apiUrl = this.paymentFormUrl.replace('/pay', '');
+            
+            // Делаем GET запрос к API Продамус согласно документации
+            const response = await axios.get(apiUrl, {
+                params: data,
+                timeout: 10000,
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                }
+            });
+
+            // Проверяем ответ
+            if (response.data && typeof response.data === 'string') {
+                // Если ответ содержит URL, возвращаем его
+                if (response.data.startsWith('http')) {
+                    return response.data;
+                }
+                // Если ответ содержит HTML, извлекаем URL из него
+                const urlMatch = response.data.match(/href="([^"]*pay[^"]*)"/);
+                if (urlMatch) {
+                    return urlMatch[1];
+                }
+                // Ищем ссылку на оплату в HTML
+                const payUrlMatch = response.data.match(/href="([^"]*\/pay[^"]*)"/);
+                if (payUrlMatch) {
+                    return payUrlMatch[1];
+                }
+            }
+
+            // Если не удалось извлечь URL, формируем его вручную
+            return this.buildPaymentUrl(data);
+            
+        } catch (error) {
+            console.error('Prodamus API request error:', error.message);
+            // В случае ошибки API, формируем URL вручную
+            return this.buildPaymentUrl(data);
+        }
     }
 
     /**
@@ -138,7 +227,33 @@ class ProdamusService {
         
         Object.keys(data).forEach(key => {
             if (data[key] !== null && data[key] !== undefined) {
-                params.append(key, data[key]);
+                if (Array.isArray(data[key])) {
+                    // Обрабатываем массивы (например, products)
+                    data[key].forEach((item, index) => {
+                        if (typeof item === 'object') {
+                            // Обрабатываем объекты в массиве
+                            Object.keys(item).forEach(subKey => {
+                                if (typeof item[subKey] === 'object' && item[subKey] !== null) {
+                                    // Обрабатываем вложенные объекты (например, tax)
+                                    Object.keys(item[subKey]).forEach(subSubKey => {
+                                        params.append(`${key}[${index}][${subKey}][${subSubKey}]`, item[subKey][subSubKey]);
+                                    });
+                                } else {
+                                    params.append(`${key}[${index}][${subKey}]`, item[subKey]);
+                                }
+                            });
+                        } else {
+                            params.append(`${key}[${index}]`, item);
+                        }
+                    });
+                } else if (typeof data[key] === 'object' && data[key] !== null) {
+                    // Обрабатываем вложенные объекты
+                    Object.keys(data[key]).forEach(subKey => {
+                        params.append(`${key}[${subKey}]`, data[key][subKey]);
+                    });
+                } else {
+                    params.append(key, data[key]);
+                }
             }
         });
 
