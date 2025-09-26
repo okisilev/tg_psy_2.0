@@ -30,9 +30,10 @@
 ### 3. Настройка Продамус
 
 1. Зарегистрируйтесь на [prodamus.ru](https://prodamus.ru)
-2. Создайте новый магазин
-3. Получите API ключи в разделе "Настройки" → "API"
-4. Настройте webhook URL: `https://yourdomain.com/webhook/prodamus`
+2. Создайте новую платежную страницу
+3. Получите ID магазина (sys) и секретный ключ в настройках платежной страницы
+4. Настройте URL для уведомлений: `https://yourdomain.com/webhook/prodamus`
+5. Убедитесь, что включена отправка уведомлений на URL
 
 ### 4. Настройка сервера
 
@@ -64,8 +65,8 @@ TELEGRAM_CHANNEL_ID=-1001234567890
 
 # Prodamus Configuration
 PRODAMUS_SHOP_ID=your_shop_id
-PRODAMUS_API_KEY=your_api_key
 PRODAMUS_SECRET_KEY=your_secret_key
+PRODAMUS_PAYMENT_FORM_URL=https://payform.ru/pay
 PRODAMUS_WEBHOOK_URL=https://yourdomain.com/webhook/prodamus
 
 # Server Configuration

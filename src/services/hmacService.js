@@ -36,10 +36,14 @@ class HmacService {
         const expectedSignature = this.createSignature(data, secret);
         
         // Используем безопасное сравнение для предотвращения timing attacks
-        return crypto.timingSafeEqual(
-            Buffer.from(signature, 'hex'),
-            Buffer.from(expectedSignature, 'hex')
-        );
+        try {
+            return crypto.timingSafeEqual(
+                Buffer.from(signature, 'hex'),
+                Buffer.from(expectedSignature, 'hex')
+            );
+        } catch (error) {
+            return false;
+        }
     }
 
     /**
@@ -76,10 +80,14 @@ class HmacService {
     verifyWebhookSignature(webhookData, signature) {
         const expectedSignature = this.createWebhookSignature(webhookData);
         
-        return crypto.timingSafeEqual(
-            Buffer.from(signature, 'hex'),
-            Buffer.from(expectedSignature, 'hex')
-        );
+        try {
+            return crypto.timingSafeEqual(
+                Buffer.from(signature, 'hex'),
+                Buffer.from(expectedSignature, 'hex')
+            );
+        } catch (error) {
+            return false;
+        }
     }
 
     /**

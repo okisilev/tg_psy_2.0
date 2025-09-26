@@ -73,16 +73,23 @@ class TelegramSubscriptionBot {
         try {
             const { body } = req;
             
-            // Проверяем HMAC подпись
-            const isValidSignature = this.hmacService.verifySignature(
-                body,
-                req.headers['x-prodamus-signature'] || req.headers['signature']
-            );
+            // Получаем подпись из заголовков (Продамус использует заголовок 'Sign')
+            const signature = req.headers['sign'] || req.headers['Sign'];
+            
+            if (!signature) {
+                console.error('No signature found in headers');
+                return res.status(400).json({ error: 'No signature found' });
+            }
+
+            // Проверяем HMAC подпись через ProdamusService
+            const isValidSignature = this.prodamusService.verifyWebhookSignature(body, signature);
 
             if (!isValidSignature) {
                 console.error('Invalid HMAC signature');
                 return res.status(400).json({ error: 'Invalid signature' });
             }
+
+            console.log('Valid webhook received:', body);
 
             // Обрабатываем уведомление о платеже
             await this.subscriptionService.processPayment(body);
@@ -95,10 +102,23 @@ class TelegramSubscriptionBot {
     }
 
     start() {
-        this.app.listen(this.port, () => {
+        const server = this.app.listen(this.port, () => {
             console.log(`Bot server running on port ${this.port}`);
             console.log(`Telegram webhook: ${process.env.WEBHOOK_URL}${process.env.WEBHOOK_PATH}`);
             console.log(`Prodamus webhook: ${process.env.WEBHOOK_URL}/webhook/prodamus`);
+        });
+
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`❌ Port ${this.port} is already in use`);
+                console.log(`💡 Try one of these solutions:`);
+                console.log(`   1. Kill the process using the port: lsof -ti:${this.port} | xargs kill`);
+                console.log(`   2. Use a different port: PORT=3001 npm start`);
+                console.log(`   3. Check what's running: lsof -i:${this.port}`);
+            } else {
+                console.error('Server error:', err);
+            }
+            process.exit(1);
         });
     }
 }

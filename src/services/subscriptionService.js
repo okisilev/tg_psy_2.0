@@ -49,9 +49,17 @@ class SubscriptionService {
      */
     async processPayment(paymentData) {
         try {
-            const { order_id, status, amount, currency } = paymentData;
-
-            if (status !== 'success') {
+            console.log('Processing payment data:', paymentData);
+            
+            // Извлекаем данные согласно формату Продамус webhook
+            const orderId = paymentData.order_id;
+            const status = paymentData.status;
+            const amount = parseFloat(paymentData.amount);
+            const currency = paymentData.currency || 'RUB';
+            
+            // Проверяем статус платежа
+            if (status !== 'success' && status !== 'paid') {
+                console.log('Payment not successful, status:', status);
                 return {
                     success: false,
                     error: 'Payment not successful'
@@ -59,7 +67,8 @@ class SubscriptionService {
             }
 
             // Проверяем, не обработан ли уже этот платеж
-            if (this.payments.has(order_id)) {
+            if (this.payments.has(orderId)) {
+                console.log('Payment already processed:', orderId);
                 return {
                     success: false,
                     error: 'Payment already processed'
@@ -67,23 +76,38 @@ class SubscriptionService {
             }
 
             // Получаем ID пользователя из custom_fields
-            const userId = paymentData.custom_fields?.telegram_user_id;
+            let userId;
+            try {
+                if (paymentData.custom_fields) {
+                    const customFields = typeof paymentData.custom_fields === 'string' 
+                        ? JSON.parse(paymentData.custom_fields) 
+                        : paymentData.custom_fields;
+                    userId = customFields.telegram_user_id;
+                }
+            } catch (parseError) {
+                console.error('Error parsing custom_fields:', parseError);
+            }
+
             if (!userId) {
+                console.error('User ID not found in payment data');
                 return {
                     success: false,
                     error: 'User ID not found in payment data'
                 };
             }
 
+            console.log('Creating subscription for user:', userId);
+
             // Создаем подписку
             const result = this.createSubscription(userId, {
-                payment_id: paymentData.payment_id,
-                order_id: order_id,
+                payment_id: paymentData.payment_id || orderId,
+                order_id: orderId,
                 amount: amount,
                 currency: currency
             });
 
             if (result.success) {
+                console.log('Subscription created successfully:', result.subscription.id);
                 // Здесь можно добавить логику для добавления пользователя в канал
                 await this.addUserToChannel(userId);
             }
@@ -93,7 +117,7 @@ class SubscriptionService {
             console.error('Payment processing error:', error);
             return {
                 success: false,
-                error: 'Payment processing failed'
+                error: 'Payment processing failed: ' + error.message
             };
         }
     }

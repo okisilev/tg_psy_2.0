@@ -237,7 +237,8 @@ ${isActive ? '🎉 Вы имеете доступ к закрытому кана
     async createPayment(chatId, userId) {
         try {
             const price = parseInt(process.env.SUBSCRIPTION_PRICE) || 1000;
-            const orderId = `order_${userId}_${Date.now()}`;
+            // Генерируем 5-значный номер заказа
+            const orderId = Math.floor(10000 + Math.random() * 90000).toString();
             
             const paymentData = {
                 userId: userId,
